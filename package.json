@@ -1,5 +1,5 @@
 {
-  "name": "@franklin/ajax-service",
+  "name": "@github1/ajax-service",
   "private": false,
   "version": "0.0.0",
   "description": "Library for invoking HTTP requests with interceptors for JSON and AMF media types",
