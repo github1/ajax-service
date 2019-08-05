@@ -1,8 +1,8 @@
 {
   "name": "@franklin/ajax-service",
   "private": false,
-  "version": "0.3.1",
-  "description": "",
+  "version": "0.3.2",
+  "description": "Library for invoking HTTP requests with interceptors for JSON and AMF media types",
   "main": "src/index.js",
   "scripts": {
     "test": "build-tools test",
@@ -14,7 +14,7 @@
   "author": "John Collier <john.collier4@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@github1/build-tools": "0.3.1"
+    "@github1/build-tools": "0.3.2"
   },
   "dependencies": {
     "normalize-url-es5": "2.0.2"
