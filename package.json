@@ -1,0 +1,29 @@
+{
+  "name": "@franklin/ajax-service",
+  "private": false,
+  "version": "0.3.1",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "build-tools test",
+    "test:watch": "build-tools test --watch",
+    "build": "build-tools-build-lib",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [],
+  "author": "John Collier <john.collier4@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@github1/build-tools": "0.3.1"
+  },
+  "dependencies": {
+    "normalize-url-es5": "2.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/github1/ajax-service"
+  }
+}
