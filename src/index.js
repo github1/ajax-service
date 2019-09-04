@@ -1,5 +1,5 @@
 import amf from './amf';
-import normalizeURL from 'normalize-url-es5';
+import normalizeURL from 'normalize-url';
 
 const windowOrGlobal = (typeof self === 'object' && self.self === self && self) ||
     (typeof global === 'object' && global.global === global && global) ||
