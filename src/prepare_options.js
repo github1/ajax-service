@@ -12,9 +12,11 @@ const resolveOrigin = () => {
 
 export default (opts) => {
   const resolvedOrigin = resolveOrigin();
+  const origUrl = opts['url'];
   const url = /^[a-z0-9]+:\/\//i.test(opts['url']) ? normalizeURL(opts['url']) : normalizeURL(`${resolvedOrigin}/${opts['url']}`);
   const fetchOpts = {
     url,
+    origUrl,
     method: opts['method'],
     body: opts['data'],
     credentials: 'same-origin',
