@@ -10,13 +10,15 @@ const resolveOrigin = () => {
   return windowOrGlobal ? windowOrGlobal.location.protocol + '//' + windowOrGlobal.location.hostname + (windowOrGlobal.location.port ? ':' + windowOrGlobal.location.port : '') : '';
 };
 
+export const prepareUrl = (url) => {
+  const resolvedOrigin = resolveOrigin();
+  return /^[a-z0-9]+:\/\//i.test(url) ? normalizeURL(url) : normalizeURL(`${resolvedOrigin}/${url}`);
+};
+
 export default (opts) => {
   const resolvedOrigin = resolveOrigin();
-  const origUrl = opts['url'];
-  const url = /^[a-z0-9]+:\/\//i.test(opts['url']) ? normalizeURL(opts['url']) : normalizeURL(`${resolvedOrigin}/${opts['url']}`);
   const fetchOpts = {
-    url,
-    origUrl,
+    url: opts.url,
     method: opts['method'],
     body: opts['data'],
     credentials: 'same-origin',
