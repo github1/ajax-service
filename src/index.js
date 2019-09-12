@@ -1,6 +1,6 @@
 import amf from './amf';
 import constants from './constants';
-import prepareOptions from './prepare_options';
+import prepareOptions, {prepareUrl} from './prepare_options';
 import crossfetch from 'cross-fetch';
 import {backOff} from 'exponential-backoff';
 
@@ -45,6 +45,7 @@ const init = interceptors => {
     send(opts) {
       const fetchOpts = prepareOptions(opts);
       invokeInterceptors('onRequest', [fetchOpts]);
+      fetchOpts.url = prepareUrl(fetchOpts.url);
       let isCancelled = false;
       const sendFetch = () => {
         let cancellableResolve;
