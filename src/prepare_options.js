@@ -10,18 +10,37 @@ const resolveOrigin = () => {
   return windowOrGlobal ? windowOrGlobal.location.protocol + '//' + windowOrGlobal.location.hostname + (windowOrGlobal.location.port ? ':' + windowOrGlobal.location.port : '') : '';
 };
 
-export const prepareUrl = (url) => {
-  const resolvedOrigin = resolveOrigin();
-  return /^[a-z0-9]+:\/\//i.test(url) ? normalizeURL(url) : normalizeURL(`${resolvedOrigin}/${url}`);
+export const prepareUrl = (opts) => {
+  const resolvedOrigin = opts.origin || resolveOrigin();
+  opts.url = /^[a-z0-9]+:\/\//i.test(opts.url) ? normalizeURL(opts.url) : normalizeURL(`${resolvedOrigin}/${opts.url}`);
+  return opts;
+};
+
+const regPrivNet = /^(localhost$|127\.|192\.168|10\.)([0-9.]+)?$/;
+
+export const prepareCredentials = (opts) => {
+  if (!opts.credentials) {
+    const resolvedOrigin = opts.origin || resolveOrigin();
+    opts.credentials = 'same-origin';
+    const urlHostname = extractHostname(opts.url);
+    if (regPrivNet.test(urlHostname)) {
+      opts.credentials = 'include';
+    } else if (resolvedOrigin) {
+      if (stripSubdomain(extractHostname(resolvedOrigin)) === stripSubdomain(urlHostname)) {
+        opts.credentials = 'include';
+      }
+    }
+  }
+  return opts;
 };
 
 export default (opts) => {
-  const resolvedOrigin = resolveOrigin();
+  const resolvedOrigin = opts.origin || resolveOrigin();
   const fetchOpts = {
     url: opts.url,
     method: opts['method'],
     body: opts['data'],
-    credentials: 'same-origin',
+    credentials: opts.credentials,
     headers: {
       ...opts['headers'],
       [constants.content_type]: opts[constants.content_type] || opts['contentType'] || constants.application_json,
@@ -48,4 +67,18 @@ export default (opts) => {
     }
   }
   return fetchOpts;
+};
+
+const regHostname = /^(https?:\/\/)([^:\/]+)/i;
+const extractHostname = (url) => {
+  const result = regHostname.exec(url);
+  return result === null || result.length < 3 ? '_' : result[2];
+};
+
+const stripSubdomain = (hostname) => {
+  const parts = hostname.split('.');
+  if (parts.length > 2) {
+    parts.shift();
+  }
+  return parts.join('.');
 };
