@@ -38,6 +38,7 @@ export const prepareCredentials = (opts) => {
 
 export default (opts) => {
   const resolvedOrigin = opts.origin || resolveOrigin();
+  opts.headers = opts.headers || {};
   const fetchOpts = {
     url: opts.url,
     method: opts['method'],
@@ -45,8 +46,8 @@ export default (opts) => {
     credentials: opts.credentials,
     headers: {
       ...opts['headers'],
-      [constants.content_type]: opts[constants.content_type] || opts['contentType'] || constants.application_json,
-      [constants.accept]: opts[constants.accept] || constants.application_json
+      [constants.content_type]: opts.headers[constants.content_type] || opts[constants.content_type] || opts['contentType'] || constants.application_json,
+      [constants.accept]: opts.headers[constants.accept] || opts[constants.accept] || constants.application_json
     }
   };
   const hasBodyData = fetchOpts.body && typeof fetchOpts.body === 'object';
