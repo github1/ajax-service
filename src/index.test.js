@@ -26,6 +26,17 @@ describe('ajax-service', () => {
       expect(res.data.body.hello).toBe('amf');
     });
   });
+  it('supports text/plain ajaxService calls', () => {
+    return ajaxService().post({
+      url: 'echo',
+      accept: ajaxService.constants.application_json,
+      contentType: ajaxService.constants.text_plain,
+      data: 'this is some text'
+    }).then(res => {
+      expect(res.data.headers['content-type']).toBe(ajaxService.constants.text_plain);
+      expect(res.data.body).toBe('this is some text');
+    });
+  });
   it('it uses the accept type from headers', () => {
     return ajaxService().post({
       url: 'echo',
