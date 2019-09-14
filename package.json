@@ -5,8 +5,8 @@
   "description": "Library for invoking HTTP requests with interceptors for JSON and AMF media types",
   "main": "src/index.js",
   "scripts": {
-    "test": "build-tools test",
-    "test:watch": "npm run test -- --watch",
+    "test": "build-tools test --webpack-dev-server false",
+    "test:watch": "npm run test -- --watch --webpack-dev-server false",
     "test:cover": "npm run test -- --coverage",
     "build": "build-tools-build-lib",
     "prepublishOnly": "npm run build"
