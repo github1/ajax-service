@@ -1,7 +1,7 @@
 {
   "name": "@github1/ajax-service",
   "private": false,
-  "version": "0.3.41",
+  "version": "0.3.42",
   "description": "Library for invoking HTTP requests with interceptors for JSON and AMF media types",
   "main": "src/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "author": "John Collier <john.collier4@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@github1/build-tools": "0.3.41"
+    "@github1/build-tools": "0.3.42"
   },
   "dependencies": {
     "cross-fetch": "3.0.4",

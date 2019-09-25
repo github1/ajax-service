@@ -107,10 +107,11 @@ const init = interceptors => {
           });
         return cancellablePromise;
       };
+      const numOfAttempts = opts.numOfAttempts || 10;
       return backOff(sendFetch, {
-        numOfAttempts: opts.numOfAttempts,
+        numOfAttempts: numOfAttempts,
         retry: (e, attemptNumber) => {
-          invokeInterceptors('onRetry', opts.interceptors, [e, attemptNumber, opts.numOfAttempts, fetchOpts]);
+          invokeInterceptors('onRetry', opts.interceptors, [e, attemptNumber, numOfAttempts, fetchOpts]);
           e.retryAttemptNumber = attemptNumber;
           return e.status === 503
             || /network request failed/i.test(e.message)
