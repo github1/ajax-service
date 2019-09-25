@@ -156,16 +156,21 @@ describe('ajax-service', () => {
     });
     it('can cancel responses', () => {
       let ranProm = false;
+      let cancelFn = jest.fn();
       ajaxService([{
         onResult: (res, cancel) => {
           cancel();
-        }
+        },
+        onCancel: cancelFn,
       }]).post({url: '/echo'})
         .then(() => {
           ranProm = true;
         });
       return delay(100)
-        .then(() => expect(ranProm).toBe(false));
+        .then(() => {
+          expect(cancelFn).toHaveBeenCalled();
+          expect(ranProm).toBe(false);
+        });
     });
     it('can cancel responses while retrying', () => {
       const requestId = `testRetryCancel${Math.floor(Math.random() * 1000)}`;
@@ -195,6 +200,22 @@ describe('ajax-service', () => {
         });
       return delay(200)
         .then(() => expect(ranProm).toBe(false));
+    });
+    it('accepts interceptors from the request opts', () => {
+      let counter = 0;
+      return ajaxService().post({
+        url: '/echo',
+        interceptors: [{
+          onResult: (res) => {
+            expect(res).toBeDefined();
+            counter++;
+          }
+        }]
+      })
+        .then(() => {
+          expect(counter)
+            .toBe(1);
+        });
     });
   });
 });

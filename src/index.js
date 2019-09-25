@@ -7,9 +7,9 @@ import prepareOptions, {
 import crossfetch from 'cross-fetch';
 import {backOff} from 'exponential-backoff';
 
-const init = interceptors => {
-
-  const invokeInterceptors = (method, args) => {
+const buildInterceptorHandler = passedInterceptors => {
+  return (method, additionalInterceptors, args) => {
+    const interceptors = (passedInterceptors || []).concat(additionalInterceptors||[]);
     if (typeof interceptors === 'undefined' || interceptors.length === 0) {
       return;
     }
@@ -30,6 +30,11 @@ const init = interceptors => {
     };
     nextInterceptor(0, args)();
   };
+};
+
+const init = interceptors => {
+
+  const invokeInterceptors = buildInterceptorHandler(interceptors);
 
   const ajaxServiceInstance = {
     constants: constants,
@@ -47,7 +52,7 @@ const init = interceptors => {
     },
     send(opts) {
       const fetchOpts = prepareOptions(opts);
-      invokeInterceptors('onRequest', [fetchOpts]);
+      invokeInterceptors('onRequest', opts.interceptors, [fetchOpts]);
       prepareUrl(fetchOpts);
       prepareCredentials(fetchOpts);
       let isCancelled = false;
@@ -72,9 +77,11 @@ const init = interceptors => {
               resPromise = res.text().then(wrapResponse(res));
             }
             resPromise = resPromise.then(resp => {
-              invokeInterceptors('onResult', [resp, () => {
+              const cancelFunc = () => {
                 isCancelled = true;
-              }]);
+                invokeInterceptors('onCancel', opts.interceptors, [fetchOpts, resp]);
+              };
+              invokeInterceptors('onResult', opts.interceptors, [resp, cancelFunc]);
               return resp;
             });
             if (res.status < 200 || res.status >= 400) {
@@ -103,7 +110,7 @@ const init = interceptors => {
       return backOff(sendFetch, {
         numOfAttempts: opts.numOfAttempts,
         retry: (e, attemptNumber) => {
-          invokeInterceptors('onRetry', [e, attemptNumber, opts.numOfAttempts, fetchOpts]);
+          invokeInterceptors('onRetry', opts.interceptors, [e, attemptNumber, opts.numOfAttempts, fetchOpts]);
           e.retryAttemptNumber = attemptNumber;
           return e.status === 503
             || /network request failed/i.test(e.message)
