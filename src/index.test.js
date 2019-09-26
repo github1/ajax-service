@@ -223,8 +223,15 @@ describe('ajax-service', () => {
         });
     });
     it('accepts interceptors from the request opts', () => {
+      expect.assertions(3);
+      let counterFromInstanceLevel = 0;
       let counter = 0;
-      return ajaxService().post({
+      return ajaxService([{
+        onResult: (res, cancel, next) => {
+          counterFromInstanceLevel++;
+          next();
+        }
+      }]).post({
         url: '/echo',
         interceptors: [{
           onResult: (res) => {
@@ -235,6 +242,8 @@ describe('ajax-service', () => {
       })
         .then(() => {
           expect(counter)
+            .toBe(1);
+          expect(counterFromInstanceLevel)
             .toBe(1);
         });
     });
