@@ -103,6 +103,7 @@ const init = interceptors => {
       return backOff(sendFetch, {
         numOfAttempts: opts.numOfAttempts,
         retry: (e, attemptNumber) => {
+          invokeInterceptors('onRetry', [e, attemptNumber, opts.numOfAttempts, fetchOpts]);
           e.retryAttemptNumber = attemptNumber;
           return e.status === 503
             || /network request failed/i.test(e.message)
