@@ -105,6 +105,7 @@ const init = interceptors => {
         retry: (e, attemptNumber) => {
           e.retryAttemptNumber = attemptNumber;
           return e.status === 503
+            || /network request failed/i.test(e.message)
             || /^request to.*failed, reason:/i.test(e.message)
             || /^failed to fetch$/i.test(e.message);
         }
