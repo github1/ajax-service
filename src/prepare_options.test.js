@@ -1,12 +1,15 @@
-import prepareOptions, {prepareUrl} from './prepare_options';
+import prepareOptions, {
+  prepareCredentials,
+  prepareUrl
+} from './prepare_options';
 
 describe('prepareOptions', () => {
   describe('urls', () => {
     it('appends the origin if no base url provided', () => {
-      expect(prepareUrl('/foo')).toMatch(/http:\/\/localhost:[^/]+\/foo/);
+      expect(prepareUrl({url: '/foo'}).url).toMatch(/http:\/\/localhost:[^/]+\/foo/);
     });
     it('uses fully qualified urls', () => {
-      expect(prepareUrl('http://foo.com/foo')).toBe('http://foo.com/foo');
+      expect(prepareUrl({url: 'http://foo.com/foo'}).url).toBe('http://foo.com/foo');
     });
   });
   describe('headers', () => {
@@ -44,6 +47,31 @@ describe('prepareOptions', () => {
         data: {},
         contentType: 'application/x-amf'
       }).body[0]).toBe(10);
+    });
+  });
+  describe('credentials', () => {
+    it('can set the credentials option', () => {
+      expect(prepareCredentials({
+        credentials: 'omit'
+      }).credentials).toBe('omit');
+    });
+    it('defaults to include for private network hosts', () => {
+      ['localhost', '127.0.0.1', '192.168.1.2', '10.1.2.3'].forEach(host => {
+        expect(prepareCredentials({
+          url: `http://${host}/something`
+        }).credentials).toBe('include');
+      });
+      ['foo.foo.com', '178.1.2.3'].forEach(host => {
+        expect(prepareCredentials({
+          url: `http://${host}/something`
+        }).credentials).toBe('same-origin');
+      });
+    });
+    it('defaults to include for subdomains', () => {
+      expect(prepareCredentials({
+        url: 'http://foo.foo.com/something',
+        origin: 'http://www.foo.com',
+      }).credentials).toBe('include');
     });
   });
 });

@@ -1,6 +1,9 @@
 import amf from './amf';
 import constants from './constants';
-import prepareOptions, {prepareUrl} from './prepare_options';
+import prepareOptions, {
+  prepareCredentials,
+  prepareUrl
+} from './prepare_options';
 import crossfetch from 'cross-fetch';
 import {backOff} from 'exponential-backoff';
 
@@ -45,7 +48,8 @@ const init = interceptors => {
     send(opts) {
       const fetchOpts = prepareOptions(opts);
       invokeInterceptors('onRequest', [fetchOpts]);
-      fetchOpts.url = prepareUrl(fetchOpts.url);
+      prepareUrl(fetchOpts);
+      prepareCredentials(fetchOpts);
       let isCancelled = false;
       const sendFetch = () => {
         let cancellableResolve;
@@ -120,11 +124,11 @@ const wrapResponse = (res) => {
 };
 
 const headersToMap = (headers) => {
-  const map = {};
-  for (let p of headers.entries()) {
-    map[p[0]] = p[1];
-  }
-  return map;
+  return JSON.parse(JSON.stringify([...headers]))
+    .reduce((map, cur, idx, arr) => {
+      map[cur[0]] = cur[1];
+      return map;
+    }, {});
 };
 
 export default init;
