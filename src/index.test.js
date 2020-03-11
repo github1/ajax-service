@@ -201,6 +201,27 @@ describe('ajax-service', () => {
       return delay(200)
         .then(() => expect(ranProm).toBe(false));
     });
+    it('can cancel retry attempts', () => {
+      const requestId = `testRetryCancelAttempt${Math.floor(Math.random() * 1000)}`;
+      expect.assertions(1);
+      return ajaxService([{
+        onRetry: (e, attemptNumber, numOfAttempts, fetchOpts, cancelRetry) => {
+          if (attemptNumber === 2) {
+            cancelRetry();
+          }
+        }
+      }]).post({
+        url: '/retry',
+        data: {
+          id: requestId,
+          respondIn: 4
+        },
+        numOfAttempts: 3,
+      })
+        .catch((err) => {
+          expect(err).toBeDefined();
+        });
+    });
     it('accepts interceptors from the request opts', () => {
       let counter = 0;
       return ajaxService().post({
