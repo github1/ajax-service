@@ -1,13 +1,12 @@
-import prepareOptions from './prepare_options';
+import prepareOptions, {prepareUrl} from './prepare_options';
 
 describe('prepareOptions', () => {
   describe('urls', () => {
     it('appends the origin if no base url provided', () => {
-      expect(prepareOptions({url: '/foo'}).url).toMatch(/http:\/\/localhost:[^/]+\/foo/);
-      expect(prepareOptions({url: '/foo'}).origUrl).toBe('/foo');
+      expect(prepareUrl('/foo')).toMatch(/http:\/\/localhost:[^/]+\/foo/);
     });
     it('uses fully qualified urls', () => {
-      expect(prepareOptions({url: 'http://foo.com/foo'}).url).toBe('http://foo.com/foo');
+      expect(prepareUrl('http://foo.com/foo')).toBe('http://foo.com/foo');
     });
   });
   describe('headers', () => {
