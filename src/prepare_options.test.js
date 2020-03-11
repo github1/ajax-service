@@ -19,7 +19,7 @@ describe('prepareOptions', () => {
     };
     it('sets default accept and content-type headers', () => {
       expect(prepareOptions({url: '/'}).headers).toEqual(defaultHeaders);
-      expect(prepareOptions({url: '/', accept: 'something'}).headers).toEqual({
+      expect(prepareOptions({url: '/', headers: { accept: 'something' }}).headers).toEqual({
         ...defaultHeaders,
         accept: 'something'
       });
