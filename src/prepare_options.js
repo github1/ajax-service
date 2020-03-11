@@ -7,7 +7,9 @@ const windowOrGlobal = (typeof self === 'object' && self.self === self && self) 
   this;
 
 const resolveOrigin = () => {
-  return windowOrGlobal ? windowOrGlobal.location.protocol + '//' + windowOrGlobal.location.hostname + (windowOrGlobal.location.port ? ':' + windowOrGlobal.location.port : '') : '';
+  return windowOrGlobal && windowOrGlobal.location ?
+    `${windowOrGlobal.location.protocol}//${windowOrGlobal.location.hostname}${(windowOrGlobal.location.port ? ':' + windowOrGlobal.location.port : '')}`
+    : '';
 };
 
 export const prepareUrl = (opts) => {
