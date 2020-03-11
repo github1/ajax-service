@@ -4,6 +4,7 @@ describe('prepareOptions', () => {
   describe('urls', () => {
     it('appends the origin if no base url provided', () => {
       expect(prepareOptions({url: '/foo'}).url).toMatch(/http:\/\/localhost:[^/]+\/foo/);
+      expect(prepareOptions({url: '/foo'}).origUrl).toBe('/foo');
     });
     it('uses fully qualified urls', () => {
       expect(prepareOptions({url: 'http://foo.com/foo'}).url).toBe('http://foo.com/foo');
