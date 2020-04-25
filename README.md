@@ -12,7 +12,19 @@ npm install @github1/ajax-service --save
 ```
 
 ## Usage
-TBD
+
+```javascript
+import ajaxService from '@github1/ajax-service';
+
+const res = await ajaxService().post({
+  url: 'echo',
+  accept: 'application/json',
+  data: {hello: 'world'}
+});
+
+console.log('headers', res.data.headers);
+console.log('body', res.data.body);
+```
 
 ## License
 [MIT](LICENSE.md)
