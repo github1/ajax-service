@@ -20,7 +20,7 @@
   "dependencies": {
     "cross-fetch": "3.0.4",
     "exponential-backoff": "2.1.1",
-    "normalize-url": "5.1.0"
+    "normalize-url": "4.5.0"
   },
   "publishConfig": {
     "access": "public"
