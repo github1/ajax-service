@@ -2,6 +2,8 @@ const retryState = {};
 module.exports = app => {
     app.post('/echo', (req, res) => {
         res.type('application/json');
+        res.header('access-control-allow-origin', req.body['request.origin']);
+        res.header('access-control-allow-headers', '*');
         res.send(Object.assign({},
             {headers: req.headers},
             {body: req.body}));
