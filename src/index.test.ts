@@ -1,4 +1,4 @@
-import ajaxService from './index';
+import { init as ajaxService } from './index';
 
 describe('ajax-service', () => {
   it('supports json ajaxService calls', () => {
