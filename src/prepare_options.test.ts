@@ -89,11 +89,17 @@ describe('prepareOptions', () => {
         ).toBe('same-origin');
       });
     });
-    it('defaults to include for subdomains', () => {
+    it('defaults to include for common base domains', () => {
       expect(
         prepareCredentials({
           url: 'http://foo.foo.com/something',
           origin: 'http://www.foo.com',
+        }).credentials
+      ).toBe('include');
+      expect(
+        prepareCredentials({
+          url: 'http://test.foo.com/something',
+          origin: 'http://www.something.foo.com',
         }).credentials
       ).toBe('include');
     });
