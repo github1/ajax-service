@@ -246,7 +246,8 @@ describe('ajax-service', () => {
       const requestId = `testRetryCancelAttempt${Math.floor(
         Math.random() * 1000
       )}`;
-      expect.assertions(1);
+      let cancelledOnAttempt = 0;
+      expect.assertions(2);
       return ajaxService([
         {
           onRetry: (
@@ -256,6 +257,7 @@ describe('ajax-service', () => {
             fetchOpts,
             cancelRetry
           ) => {
+            cancelledOnAttempt = attemptNumber;
             if (attemptNumber === 2) {
               cancelRetry();
             }
@@ -271,6 +273,7 @@ describe('ajax-service', () => {
           numOfAttempts: 3,
         })
         .catch((err) => {
+          expect(cancelledOnAttempt).toBe(2);
           expect(err).toBeDefined();
         });
     });
@@ -282,7 +285,7 @@ describe('ajax-service', () => {
         {
           onResult: (res, cancel, next) => {
             counterFromInstanceLevel++;
-            next();
+            return next();
           },
         },
       ])
@@ -300,6 +303,45 @@ describe('ajax-service', () => {
         .then(() => {
           expect(counter).toBe(1);
           expect(counterFromInstanceLevel).toBe(1);
+        });
+    });
+    it('can return promise from interceptor', () => {
+      // expect.assertions(3);
+      let initTime = new Date().getTime();
+      const interceptorTimeoutRan: Record<string, number> = {};
+      const timeout1 = 50;
+      const timeout2 = 50;
+      return ajaxService([
+        {
+          onRequest: (opts, next) => {
+            return new Promise<void>((resolve) => {
+              setTimeout(() => {
+                interceptorTimeoutRan['1'] = new Date().getTime();
+                resolve();
+              }, timeout1);
+            }).then(() => next());
+          },
+        },
+        {
+          onRequest: (opts) => {
+            return new Promise<void>((resolve) => {
+              setTimeout(() => {
+                interceptorTimeoutRan['2'] = new Date().getTime();
+                resolve();
+              }, timeout2);
+            });
+          },
+        },
+      ])
+        .post({
+          url: '/echo',
+        })
+        .then(() => {
+          const timeNow = new Date().getTime();
+          expect(timeNow - initTime).toBeGreaterThan(timeout1 + timeout2);
+          expect(
+            interceptorTimeoutRan['2'] - interceptorTimeoutRan['1']
+          ).toBeGreaterThan(timeout1);
         });
     });
   });
