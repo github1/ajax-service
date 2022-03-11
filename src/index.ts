@@ -103,11 +103,21 @@ const ajaxServiceInit: AjaxServiceInitializer = (
             } else if (
               responseContentType.indexOf(constants.application_amf) > -1
             ) {
-              resPromise = fetchResponse.arrayBuffer().then((buffer) => {
-                return wrapResponse(fetchResponse)(
-                  new amf.Deserializer(new Uint8Array(buffer)).readObject()
-                );
-              });
+              resPromise = fetchResponse
+                .arrayBuffer()
+                .then((buffer) => {
+                  const deserialized = new amf.Deserializer(
+                    new Uint8Array(buffer)
+                  ).readObject();
+                  return wrapResponse(fetchResponse)(deserialized);
+                })
+                .catch((err) => {
+                  if (typeof err === 'string') {
+                    // Wrap amf deserialization errors
+                    err = new Error(err);
+                  }
+                  throw err;
+                });
             } else {
               resPromise = fetchResponse
                 .text()
@@ -190,11 +200,13 @@ export const init = ajaxServiceInit;
 function wrapResponse(
   fetchResponse: Response
 ): (body: any) => AjaxServiceResponse {
-  return (body: any): AjaxServiceResponse => ({
-    status: fetchResponse.status,
-    data: body,
-    headers: convertHeaders(fetchResponse.headers),
-  });
+  return (body: any): AjaxServiceResponse => {
+    return {
+      status: fetchResponse.status,
+      data: body,
+      headers: convertHeaders(fetchResponse.headers),
+    };
+  };
 }
 
 function convertHeaders(headers: Headers): Record<string, string> {
