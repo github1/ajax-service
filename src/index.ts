@@ -11,7 +11,7 @@ import prepareOptions, {
 } from './prepare_options';
 import crossfetch from 'cross-fetch';
 import { backOff } from 'exponential-backoff';
-const amf = require('./amf');
+import '@github1/amfjs/amf';
 
 const buildInterceptorHandler = (passedInterceptors: Interceptor[] = []) => {
   return async (
