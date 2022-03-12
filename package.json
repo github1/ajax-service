@@ -8,7 +8,7 @@
     "test": "build-tools test --webpack-dev-server false",
     "test:watch": "npm run test -- --watch --webpack-dev-server false",
     "test:cover": "npm run test -- --coverage",
-    "build": "build-tools-build-lib && cp ./src/amf.js ./dist && cp ./src/amf.js ./dist/es5",
+    "build": "build-tools-build-lib",
     "prepublishOnly": "npm run build"
   },
   "keywords": [],
