@@ -1,3 +1,4 @@
+import constants from './constants';
 import prepareOptions, {
   prepareCredentials,
   prepareUrl,
@@ -22,13 +23,13 @@ describe('prepareOptions', () => {
       'content-type': 'application/json',
     };
     it('sets default accept and content-type headers', () => {
-      expect(prepareOptions({ url: '/' }).headers).toEqual(defaultHeaders);
+      expect(prepareOptions({ url: '/' }).headers).toEqual(expect.objectContaining(defaultHeaders));
       expect(
         prepareOptions({ url: '/', headers: { accept: 'something' } }).headers
-      ).toEqual({
+      ).toEqual(expect.objectContaining({
         ...defaultHeaders,
         accept: 'something',
-      });
+      }));
     });
     it('accepts contentType for content-type', () => {
       expect(
@@ -36,23 +37,19 @@ describe('prepareOptions', () => {
           url: '/',
           contentType: 'something',
         }).headers
-      ).toEqual({
+      ).toEqual(expect.objectContaining({
         ...defaultHeaders,
         'content-type': 'something',
-      });
+      }));
     });
   });
   describe('body', () => {
-    it('injects the request origin into the body', () => {
+    it('injects the request origin as a header', () => {
       expect(
-        JSON.parse(
-          `${
-            prepareOptions({
-              url: '/',
-              data: {},
-            }).body
-          }`
-        )['request.origin']
+        prepareOptions({
+          url: '/',
+          data: {},
+        }).headers[constants.request_origin]
       ).toMatch(/http:\/\/localhost:[^/]+/);
     });
     it('serializes amf content', () => {
