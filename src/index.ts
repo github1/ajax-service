@@ -60,7 +60,9 @@ export type AjaxServiceInitializer = ((
   interceptors?: Interceptor[]
 ) => AjaxService) & { constants: typeof constants };
 
-const init: AjaxServiceInitializer = (interceptors: Interceptor[] = []) => {
+const ajaxServiceInit: AjaxServiceInitializer = (
+  interceptors: Interceptor[] = []
+) => {
   const invokeInterceptors = buildInterceptorHandler(interceptors);
 
   const ajaxServiceInstance: AjaxService = {
@@ -183,7 +185,9 @@ const init: AjaxServiceInitializer = (interceptors: Interceptor[] = []) => {
   };
   return ajaxServiceInstance;
 };
-init.constants = constants;
+ajaxServiceInit.constants = constants;
+
+export const init = ajaxServiceInit;
 
 function wrapResponse(
   fetchResponse: Response
@@ -202,5 +206,3 @@ function convertHeaders(headers: Headers): Record<string, string> {
   });
   return obj;
 }
-
-export default init;
