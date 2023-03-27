@@ -26,7 +26,10 @@ export type InterceptorPhases =
 export type Interceptor<TPhase extends InterceptorPhases = InterceptorPhases> =
   {
     [k in TPhase]?: k extends 'onRequest'
-      ? (req: AjaxServiceRequestOptionsBase) => void
+      ? (
+          req: AjaxServiceRequestOptionsBase,
+          next?: () => Promise<void>
+        ) => void | Promise<void>
       : k extends 'onRetry'
       ? (
           e: Error & { status: number; response: AjaxServiceResponse },
@@ -34,16 +37,20 @@ export type Interceptor<TPhase extends InterceptorPhases = InterceptorPhases> =
           numOfAttempts: number,
           fetchOpts: AjaxServiceRequestOptionsBase,
           cancelRetry: () => void,
-          next?: () => void
-        ) => void
+          next?: () => Promise<void>
+        ) => void | Promise<void>
       : k extends 'onResult'
-      ? (res: AjaxServiceResponse, cancel: () => void, next: () => void) => void
+      ? (
+          res: AjaxServiceResponse,
+          cancel: () => void,
+          next?: () => Promise<void>
+        ) => void | Promise<void>
       : k extends 'onCancel'
       ? (
           req: AjaxServiceRequestOptionsBase,
           res: AjaxServiceResponse,
-          next?: () => void
-        ) => void
+          next?: () => Promise<void>
+        ) => void | Promise<void>
       : never;
   };
 

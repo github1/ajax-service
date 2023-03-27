@@ -13,34 +13,32 @@ import crossfetch from 'cross-fetch';
 import { backOff } from 'exponential-backoff';
 const amf = require('./amf');
 
-const buildInterceptorHandler = (passedInterceptors: Interceptor[]) => {
-  return (
-    method: InterceptorPhases,
-    additionalInterceptors: Interceptor[],
+const buildInterceptorHandler = (passedInterceptors: Interceptor[] = []) => {
+  return async (
+    phase: InterceptorPhases,
+    additionalInterceptors: Interceptor[] = [],
     args: any[]
-  ) => {
-    const interceptors = (passedInterceptors || []).concat(
-      additionalInterceptors || []
-    );
-    if (typeof interceptors === 'undefined' || interceptors.length === 0) {
-      return;
+  ): Promise<void> => {
+    const interceptors = [...passedInterceptors, ...additionalInterceptors];
+    if (interceptors.length === 0) {
+      return Promise.resolve();
     }
-    const nextInterceptor = (index: number, args: any[]) => {
-      return () => {
-        if (index > interceptors.length - 1) {
-          return;
-        }
-        const next = nextInterceptor(index + 1, args);
-        if (!interceptors[index].hasOwnProperty(method)) {
-          next();
-        } else {
-          const sc = args.slice();
-          sc.push(next);
-          interceptors[index][method].apply(interceptors[index], sc);
-        }
-      };
+    const callInterceptorAtIndex = (index: number) => async () => {
+      const interceptor = interceptors[index];
+      if (index > interceptors.length - 1) {
+        return Promise.resolve();
+      }
+      const callNextInterceptor = callInterceptorAtIndex(index + 1);
+      if (interceptor.hasOwnProperty(phase)) {
+        await interceptor[phase].apply(interceptor, [
+          ...args,
+          callNextInterceptor,
+        ]);
+      } else {
+        await callNextInterceptor();
+      }
     };
-    nextInterceptor(0, args)();
+    return callInterceptorAtIndex(0)();
   };
 };
 
@@ -76,9 +74,9 @@ const ajaxServiceInit: AjaxServiceInitializer = (
     delete(opts: Omit<AjaxServiceRequestOptions, 'method'>) {
       return this.send({ ...opts, method: 'DELETE' });
     },
-    send(opts: AjaxServiceRequestOptions) {
+    send: async (opts: AjaxServiceRequestOptions) => {
       const fetchOpts = prepareOptions(opts);
-      invokeInterceptors('onRequest', opts.interceptors, [fetchOpts]);
+      await invokeInterceptors('onRequest', opts.interceptors, [fetchOpts]);
       prepareUrl(fetchOpts);
       prepareCredentials(fetchOpts);
       let isCancelled = false;
@@ -115,7 +113,7 @@ const ajaxServiceInit: AjaxServiceInitializer = (
                 .text()
                 .then(wrapResponse(fetchResponse));
             }
-            resPromise = resPromise.then((resp: AjaxServiceResponse) => {
+            resPromise = resPromise.then(async (resp: AjaxServiceResponse) => {
               const cancelFunc = () => {
                 isCancelled = true;
                 invokeInterceptors('onCancel', opts.interceptors, [
@@ -123,7 +121,7 @@ const ajaxServiceInit: AjaxServiceInitializer = (
                   resp,
                 ]);
               };
-              invokeInterceptors('onResult', opts.interceptors, [
+              await invokeInterceptors('onResult', opts.interceptors, [
                 resp,
                 cancelFunc,
               ]);
