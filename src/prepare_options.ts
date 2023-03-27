@@ -71,9 +71,7 @@ export default (
     },
   };
   const hasBodyData = fetchOpts.body && typeof fetchOpts.body === 'object';
-  if (hasBodyData) {
-    fetchOpts.body['request.origin'] = resolvedOrigin;
-  }
+  fetchOpts.headers[constants.request_origin] = resolvedOrigin;
   switch (fetchOpts.headers[constants.content_type]) {
     case constants.application_amf: {
       const serializer = new amf.Serializer();

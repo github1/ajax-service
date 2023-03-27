@@ -7,5 +7,6 @@ export default {
   origin: 'Origin',
   authorization: 'Authorization',
   content_type: 'content-type',
-  accept: 'accept'
+  accept: 'accept',
+  request_origin: 'x-request-origin'
 };
