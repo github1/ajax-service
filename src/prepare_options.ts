@@ -1,5 +1,5 @@
 import { AjaxServiceRequestOptions, RequestInitWithUrl } from './types';
-import * as amf from './amf';
+import '@github1/amfjs/amf';
 import constants from './constants';
 import normalizeURL from 'normalize-url';
 
