@@ -95,6 +95,28 @@ describe('ajax-service', () => {
           expect(res.data.status).toBe('success');
         });
     });
+    it('does not retry for amf deserialization errors', () => {
+      expect.assertions(1);
+      const requestId = `testAmfDeserializationError${Math.floor(
+        Math.random() * 1000
+      )}`;
+      return ajaxService()
+        .post({
+          url: 'retry',
+          contentType: ajaxService.constants.application_amf,
+          data: {
+            id: requestId,
+            respondIn: 2,
+            badResponseSerialization: true,
+          },
+          headers: {
+            accept: ajaxService.constants.application_amf,
+          },
+        })
+        .catch((err) => {
+          expect(err.message).toMatch(/AMF/i);
+        });
+    });
     it('retries for dns resolution errors', () => {
       return ajaxService()
         .post({
