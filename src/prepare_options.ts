@@ -100,7 +100,7 @@ const extractHostname = (url) => {
 
 const stripSubdomain = (hostname) => {
   const parts = hostname.split('.');
-  if (parts.length > 2) {
+  while (parts.length > 2) {
     parts.shift();
   }
   return parts.join('.');
