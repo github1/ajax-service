@@ -8,7 +8,7 @@ describe('prepareOptions', () => {
   describe('urls', () => {
     it('appends the origin if no base url provided', () => {
       expect(prepareUrl({ url: '/foo' }).url).toMatch(
-        /http:\/\/localhost:[^/]+\/foo/
+        /http:\/\/localhost(:[^/]+)?\/foo/
       );
     });
     it('uses fully qualified urls', () => {
@@ -50,7 +50,7 @@ describe('prepareOptions', () => {
           url: '/',
           data: {},
         }).headers[constants.request_origin]
-      ).toMatch(/http:\/\/localhost:[^/]+/);
+      ).toMatch(/http:\/\/localhost(:[^/]+)?/);
     });
     it('serializes amf content', () => {
       expect(

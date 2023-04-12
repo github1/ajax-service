@@ -345,7 +345,7 @@ describe('ajax-service', () => {
           },
         },
         {
-          onRequest: (opts) => {
+          onRequest: () => {
             return new Promise<void>((resolve) => {
               setTimeout(() => {
                 interceptorTimeoutRan['2'] = new Date().getTime();

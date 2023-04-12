@@ -1,7 +1,7 @@
 import { AjaxServiceRequestOptions, RequestInitWithUrl } from './types';
 import '@github1/amfjs/amf';
 import constants from './constants';
-import normalizeURL from 'normalize-url';
+import * as normalizeURL from 'normalize-url';
 
 const windowOrGlobal: any =
   (typeof self === 'object' && self.self === self && self) ||
