@@ -1,7 +1,7 @@
 {
   "name": "@github1/ajax-service",
   "private": false,
-  "version": "0.4.46",
+  "version": "0.4.3",
   "description": "Library for invoking HTTP requests for JSON and AMF media types",
   "main": "dist/es5/index.js",
   "scripts": {
@@ -15,10 +15,10 @@
   "author": "John Collier <john.collier4@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@github1/build-tools": "0.4.46"
+    "@github1/build-tools": "0.4.47"
   },
   "dependencies": {
-    "@github1/amfjs": "1.0.1",
+    "@github1/amfjs": "1.0.2",
     "cross-fetch": "3.1.4",
     "exponential-backoff": "2.1.1",
     "normalize-url": "5.1.0"
