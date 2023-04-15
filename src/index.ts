@@ -8,7 +8,8 @@ import {
   AjaxServiceRequestOptionsBase,
   ResponseListener,
   CancelListener,
-  RetryListener,
+  RetryState,
+  RequestState,
 } from './types';
 import constants from './constants';
 import prepareOptions, {
@@ -86,6 +87,11 @@ const ajaxServiceInit: AjaxServiceInitializer = (
       return this.send({ ...opts, method: 'DELETE' });
     },
     send: async (opts: AjaxServiceRequestOptions) => {
+      const retryState: RetryState = {
+        attemptNumber: 0,
+        numOfAttempts: 0,
+        err: undefined,
+      };
       const allConfigs = [...(configs || []), ...(opts?.configs || [])];
       function fetchCreator(): Promise<AjaxServiceResponse> {
         const currentOptsRef: AjaxServiceRequestOptionsBase[] = [];
@@ -133,9 +139,10 @@ const ajaxServiceInit: AjaxServiceInitializer = (
           .filter((config) => !!config?.onRequest)
           .map((config) => config.onRequest as Interceptor);
         let index = 0;
-        const reqState = {
+        const reqState: RequestState = {
           cancel: cancelFunc,
           next: null,
+          retryState: retryState,
         };
         const theNextInterceptor: Interceptor = (o) => {
           return (interceptors[index++] || mainFetchCreator)(o, {
@@ -152,28 +159,11 @@ const ajaxServiceInit: AjaxServiceInitializer = (
       return backOff(fetchCreator, {
         numOfAttempts: numOfAttempts,
         retry: (e, attemptNumber) => {
-          let retryCancelled = false;
-          const cancelRetry = () => {
-            retryCancelled = true;
-          };
-          for (const retryListener of allConfigs
-            .filter((config) => !!config?.onRetry)
-            .map((config) => config.onRetry as RetryListener)) {
-            retryListener({
-              err: e,
-              attemptNumber,
-              numOfAttempts,
-              req: opts,
-              cancelRetry,
-            });
-            if (retryCancelled) {
-              break;
-            }
-          }
-          if (retryCancelled) {
-            return false;
-          }
           e.retryAttemptNumber = attemptNumber;
+          // update retryState
+          retryState.attemptNumber = attemptNumber;
+          retryState.numOfAttempts = numOfAttempts;
+          retryState.err = e;
           return (
             e.status === 503 ||
             /network request failed/i.test(e.message) ||

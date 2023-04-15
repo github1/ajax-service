@@ -21,8 +21,15 @@ export type AjaxServiceResponse<T = any> = {
   data: T;
 };
 
+export type RetryState = {
+  err: Error & { status: number; response: AjaxServiceResponse };
+  attemptNumber: number;
+  numOfAttempts: number;
+};
+
 export type RequestState = {
   cancel: () => Promise<AjaxServiceResponse>;
+  retryState: RetryState;
   next: (req: AjaxServiceRequestOptionsBase) => Promise<AjaxServiceResponse>;
 };
 
@@ -40,14 +47,6 @@ export type ResponseListener = (
   responseState: ResponseState
 ) => void | Promise<void>;
 
-export type RetryState = {
-  err: Error & { status: number; response: AjaxServiceResponse };
-  attemptNumber: number;
-  numOfAttempts: number;
-  req: AjaxServiceRequestOptionsBase;
-  cancelRetry: () => void;
-};
-export type RetryListener = (retryState: RetryState) => void;
 
 export type CancelState = {
   req: AjaxServiceRequestOptionsBase;
@@ -57,7 +56,6 @@ export type CancelListener = (cancelState: CancelState) => void;
 export type AjaxServiceConfig = {
   onRequest: Interceptor;
   onResponse: ResponseListener;
-  onRetry: RetryListener;
   onCancel: CancelListener;
 };
 

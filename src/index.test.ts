@@ -312,12 +312,13 @@ describe('ajax-service', () => {
       let cancelledOnAttempt = 0;
       return ajaxService([
         {
-          onRetry: ({ attemptNumber, cancelRetry }) => {
-            cancelledOnAttempt = attemptNumber;
-            if (attemptNumber === 2) {
-              cancelRetry();
+          onRequest(req, { next, cancel, retryState }) {
+            cancelledOnAttempt = retryState.attemptNumber;
+            if (retryState.attemptNumber === 2) {
+              return cancel();
             }
-          },
+            return next(req);
+          }
         },
       ])
         .post({
@@ -386,29 +387,23 @@ describe('ajax-service', () => {
     });
     it('can return promise from interceptor', () => {
       expect.assertions(2);
-      let initTime = new Date().getTime();
+      const initTime = new Date().getTime();
       const interceptorTimeoutRan: Record<string, number> = {};
-      const timeout1 = 50;
-      const timeout2 = 50;
+      const timeout1 = 300;
+      const timeout2 = 300;
       return ajaxService([
         {
-          onRequest: (opts, { next }) => {
-            return new Promise<void>((resolve) => {
-              setTimeout(() => {
-                interceptorTimeoutRan['1'] = new Date().getTime();
-                resolve();
-              }, timeout1);
-            }).then(() => next(opts));
+          onRequest: async (opts, { next }) => {
+            await delay(timeout1);
+            interceptorTimeoutRan['1'] = new Date().getTime() - initTime;
+            return next(opts);
           },
         },
         {
-          onRequest: (opts, { next }) => {
-            return new Promise<void>((resolve) => {
-              setTimeout(() => {
-                interceptorTimeoutRan['2'] = new Date().getTime();
-                resolve();
-              }, timeout2);
-            }).then(() => next(opts));
+          onRequest: async (opts, { next }) => {
+            await delay(timeout2);
+            interceptorTimeoutRan['2'] = new Date().getTime() - initTime;
+            return next(opts);
           },
         },
       ])
@@ -416,11 +411,11 @@ describe('ajax-service', () => {
           url: '/echo',
         })
         .then(() => {
-          const timeNow = new Date().getTime();
           expect(
-            interceptorTimeoutRan['2'] - interceptorTimeoutRan['1']
-          ).toBeGreaterThan(timeout1);
-          expect(timeNow - initTime).toBeGreaterThan(timeout1 + timeout2);
+            interceptorTimeoutRan['2']
+          ).toBeGreaterThan(interceptorTimeoutRan['1']);
+          expect(new Date().getTime() - initTime)
+            .toBeGreaterThanOrEqual(timeout1 + timeout2);
         });
     });
   });
