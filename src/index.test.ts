@@ -1,9 +1,16 @@
 import { init as ajaxService } from './index';
 
+type EchoData = {
+  headers: Record<string, string>;
+  body: any;
+  status: number;
+};
+
 describe('ajax-service', () => {
   it('supports json ajaxService calls', () => {
+    expect.assertions(4);
     return ajaxService()
-      .post({
+      .post<EchoData>({
         url: 'echo',
         accept: ajaxService.constants.application_json,
         contentType: ajaxService.constants.application_json,
@@ -21,8 +28,9 @@ describe('ajax-service', () => {
       });
   });
   it('supports amf ajaxService calls', () => {
+    expect.assertions(3);
     return ajaxService()
-      .post({
+      .post<EchoData>({
         url: 'echo',
         accept: ajaxService.constants.application_amf,
         contentType: ajaxService.constants.application_amf,
@@ -39,8 +47,9 @@ describe('ajax-service', () => {
       });
   });
   it('supports text/plain ajaxService calls', () => {
+    expect.assertions(2);
     return ajaxService()
-      .post({
+      .post<EchoData>({
         url: 'echo',
         accept: ajaxService.constants.application_json,
         contentType: ajaxService.constants.text_plain,
@@ -54,8 +63,9 @@ describe('ajax-service', () => {
       });
   });
   it('it uses the accept type from headers', () => {
+    expect.assertions(3);
     return ajaxService()
-      .post({
+      .post<EchoData>({
         url: 'echo',
         contentType: ajaxService.constants.application_amf,
         data: {
@@ -77,9 +87,10 @@ describe('ajax-service', () => {
   });
   describe('retries with exponential back-off', () => {
     it('eventually succeeds', () => {
+      expect.assertions(2);
       const requestId = `testSucceeds${Math.floor(Math.random() * 1000)}`;
       return ajaxService()
-        .post({
+        .post<EchoData>({
           url: 'retry',
           contentType: ajaxService.constants.application_amf,
           data: {
@@ -118,11 +129,14 @@ describe('ajax-service', () => {
         });
     });
     it('retries for dns resolution errors', () => {
+      expect.assertions(2);
       return ajaxService()
         .post({
           url: 'http://expectthisdoesnexist',
           contentType: ajaxService.constants.application_amf,
-          numOfAttempts: 2,
+          retry: {
+            attempts: 2,
+          },
           data: {},
           headers: {
             accept: ajaxService.constants.application_json,
@@ -134,11 +148,14 @@ describe('ajax-service', () => {
         });
     });
     it('retries for connect errors', () => {
+      expect.assertions(2);
       return ajaxService()
         .post({
           url: 'http://localhost:9009',
           contentType: ajaxService.constants.application_amf,
-          numOfAttempts: 2,
+          retry: {
+            attempts: 2,
+          },
           data: {},
           headers: {
             accept: ajaxService.constants.application_json,
@@ -150,10 +167,13 @@ describe('ajax-service', () => {
         });
     });
     it('does not retry for 404', () => {
+      expect.assertions(2);
       return ajaxService()
         .post({
           url: '/notfound',
-          numOfAttempts: 2,
+          retry: {
+            attempts: 2,
+          },
           data: {},
         })
         .catch((err) => {
@@ -163,12 +183,15 @@ describe('ajax-service', () => {
         });
     });
     it('fails if numOfAttempts is exceeded', () => {
+      expect.assertions(1);
       const requestId = `testFails${Math.floor(Math.random() * 1000)}`;
       return ajaxService()
         .post({
           url: 'retry',
           contentType: ajaxService.constants.application_amf,
-          numOfAttempts: 2,
+          retry: {
+            attempts: 2,
+          },
           data: {
             id: requestId,
             respondIn: 3,
@@ -184,12 +207,14 @@ describe('ajax-service', () => {
   });
   describe('interceptors', () => {
     it('can intercept before the request', () => {
+      expect.assertions(1);
       let counter = 0;
       return ajaxService([
         {
-          onRequest: (opts) => {
+          onRequest: (opts, { next }) => {
             opts.url = opts.url.replace(/notecho/, 'echo');
             counter++;
+            return next(opts);
           },
         },
       ])
@@ -199,10 +224,11 @@ describe('ajax-service', () => {
         });
     });
     it('can intercept the response', () => {
+      expect.assertions(2);
       let counter = 0;
       return ajaxService([
         {
-          onResult: (res) => {
+          onResponse: ({ res }) => {
             expect(res).toBeDefined();
             counter++;
           },
@@ -213,13 +239,15 @@ describe('ajax-service', () => {
           expect(counter).toBe(1);
         });
     });
-    it('can cancel responses', () => {
+    it('can cancel requests', () => {
+      expect.assertions(3);
       let ranProm = false;
+      let caughtErr = null;
       let cancelFn = jest.fn();
       ajaxService([
         {
-          onResult: (res, cancel) => {
-            cancel();
+          onRequest: (req, { cancel }) => {
+            return cancel();
           },
           onCancel: cancelFn,
         },
@@ -227,24 +255,31 @@ describe('ajax-service', () => {
         .post({ url: '/echo' })
         .then(() => {
           ranProm = true;
+        })
+        .catch((err) => {
+          caughtErr = err;
         });
       return delay(100).then(() => {
         expect(cancelFn).toHaveBeenCalled();
         expect(ranProm).toBe(false);
+        expect(caughtErr.message).toBe('cancelled');
       });
     });
     it('can cancel responses while retrying', () => {
+      expect.assertions(2);
       const requestId = `testRetryCancel${Math.floor(Math.random() * 1000)}`;
       let ranProm = null;
+      let caughtErr = null;
       let attempts = 0;
       ajaxService([
         {
-          onResult: (res, cancel) => {
+          onRequest: (req, { cancel, next }) => {
             attempts++;
             ranProm = false;
             if (attempts === 2) {
-              cancel();
+              return cancel();
             }
+            return next(req);
           },
         },
       ])
@@ -254,31 +289,30 @@ describe('ajax-service', () => {
             id: requestId,
             respondIn: 4,
           },
-          numOfAttempts: 3,
+          retry: {
+            attempts: 3,
+          },
         })
         .then(() => {
           ranProm = true;
         })
-        .catch(() => {
-          ranProm = true;
+        .catch((err) => {
+          caughtErr = err;
         });
-      return delay(200).then(() => expect(ranProm).toBe(false));
+      return delay(200).then(() => {
+        expect(ranProm).toBe(false);
+        expect(caughtErr.message).toBe('cancelled');
+      });
     });
     it('can cancel retry attempts', () => {
+      expect.assertions(2);
       const requestId = `testRetryCancelAttempt${Math.floor(
         Math.random() * 1000
       )}`;
       let cancelledOnAttempt = 0;
-      expect.assertions(2);
       return ajaxService([
         {
-          onRetry: (
-            e,
-            attemptNumber,
-            numOfAttempts,
-            fetchOpts,
-            cancelRetry
-          ) => {
+          onRetry: ({ attemptNumber, cancelRetry }) => {
             cancelledOnAttempt = attemptNumber;
             if (attemptNumber === 2) {
               cancelRetry();
@@ -292,7 +326,9 @@ describe('ajax-service', () => {
             id: requestId,
             respondIn: 4,
           },
-          numOfAttempts: 3,
+          retry: {
+            attempts: 3,
+          },
         })
         .catch((err) => {
           expect(cancelledOnAttempt).toBe(2);
@@ -300,24 +336,26 @@ describe('ajax-service', () => {
         });
     });
     it('accepts interceptors from the request opts', () => {
-      expect.assertions(3);
+      expect.assertions(2);
       let counterFromInstanceLevel = 0;
       let counter = 0;
       return ajaxService([
         {
-          onResult: (res, cancel, next) => {
+          onRequest: async (req, { next }) => {
+            const res = next(req);
             counterFromInstanceLevel++;
-            return next();
+            return res;
           },
         },
       ])
         .post({
           url: '/echo',
-          interceptors: [
+          configs: [
             {
-              onResult: (res) => {
-                expect(res).toBeDefined();
+              onRequest: async (req, { next }) => {
+                const res = next(req);
                 counter++;
+                return res;
               },
             },
           ],
@@ -327,31 +365,50 @@ describe('ajax-service', () => {
           expect(counterFromInstanceLevel).toBe(1);
         });
     });
+    it('intercepts requests', async () => {
+      const capture = [];
+      let counter = 0;
+      await ajaxService([
+        {
+          onRequest: async (opts, { next }) => {
+            try {
+              capture.push(`before:${counter++}`);
+              return next(opts);
+            } finally {
+              capture.push(`after:${counter++}`);
+            }
+          },
+        },
+      ]).post({
+        url: '/echo',
+      });
+      console.log(capture);
+    });
     it('can return promise from interceptor', () => {
-      // expect.assertions(3);
+      expect.assertions(2);
       let initTime = new Date().getTime();
       const interceptorTimeoutRan: Record<string, number> = {};
       const timeout1 = 50;
       const timeout2 = 50;
       return ajaxService([
         {
-          onRequest: (opts, next) => {
+          onRequest: (opts, { next }) => {
             return new Promise<void>((resolve) => {
               setTimeout(() => {
                 interceptorTimeoutRan['1'] = new Date().getTime();
                 resolve();
               }, timeout1);
-            }).then(() => next());
+            }).then(() => next(opts));
           },
         },
         {
-          onRequest: () => {
+          onRequest: (opts, { next }) => {
             return new Promise<void>((resolve) => {
               setTimeout(() => {
                 interceptorTimeoutRan['2'] = new Date().getTime();
                 resolve();
               }, timeout2);
-            });
+            }).then(() => next(opts));
           },
         },
       ])
@@ -360,10 +417,10 @@ describe('ajax-service', () => {
         })
         .then(() => {
           const timeNow = new Date().getTime();
-          expect(timeNow - initTime).toBeGreaterThan(timeout1 + timeout2);
           expect(
             interceptorTimeoutRan['2'] - interceptorTimeoutRan['1']
           ).toBeGreaterThan(timeout1);
+          expect(timeNow - initTime).toBeGreaterThan(timeout1 + timeout2);
         });
     });
   });

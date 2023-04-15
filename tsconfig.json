@@ -20,11 +20,12 @@
     "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "dist",
     "removeComments": true
   },
   "include": [
+    "index.ts",
     "src/**/*"
   ],
   "exclude": [

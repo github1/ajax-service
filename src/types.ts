@@ -1,4 +1,8 @@
-export interface AjaxServiceRequestOptionsBase {
+import constants from './constants';
+export type AjaxServiceRequestRetryOptions = {
+  attempts: number;
+};
+export type AjaxServiceRequestOptionsBase = {
   method: string;
   url: string;
   id?: string;
@@ -8,54 +12,71 @@ export interface AjaxServiceRequestOptionsBase {
   contentType?: string;
   credentials?: RequestCredentials;
   origin?: string;
-  numOfAttempts?: number;
-}
+  retry?: AjaxServiceRequestRetryOptions;
+};
 
-export interface AjaxServiceResponse {
+export type AjaxServiceResponse<T = any> = {
   status: number;
   headers: Record<string, string>;
-  data: any;
-}
+  data: T;
+};
 
-export type InterceptorPhases =
-  | 'onRequest'
-  | 'onRetry'
-  | 'onResult'
-  | 'onCancel';
+export type RequestState = {
+  cancel: () => Promise<AjaxServiceResponse>;
+  next: (req: AjaxServiceRequestOptionsBase) => Promise<AjaxServiceResponse>;
+};
 
-export type Interceptor<TPhase extends InterceptorPhases = InterceptorPhases> =
-  {
-    [k in TPhase]?: k extends 'onRequest'
-      ? (
-          req: AjaxServiceRequestOptionsBase,
-          next?: () => Promise<void>
-        ) => void | Promise<void>
-      : k extends 'onRetry'
-      ? (
-          e: Error & { status: number; response: AjaxServiceResponse },
-          attemptNumber: number,
-          numOfAttempts: number,
-          fetchOpts: AjaxServiceRequestOptionsBase,
-          cancelRetry: () => void,
-          next?: () => Promise<void>
-        ) => void | Promise<void>
-      : k extends 'onResult'
-      ? (
-          res: AjaxServiceResponse,
-          cancel: () => void,
-          next?: () => Promise<void>
-        ) => void | Promise<void>
-      : k extends 'onCancel'
-      ? (
-          req: AjaxServiceRequestOptionsBase,
-          res: AjaxServiceResponse,
-          next?: () => Promise<void>
-        ) => void | Promise<void>
-      : never;
-  };
+export type Interceptor = (
+  req: AjaxServiceRequestOptionsBase,
+  requestState: RequestState
+) => Promise<AjaxServiceResponse>;
+
+export type ResponseState = {
+  req: AjaxServiceRequestOptionsBase;
+  res: AjaxServiceResponse;
+};
+
+export type ResponseListener = (
+  responseState: ResponseState
+) => void | Promise<void>;
+
+export type RetryState = {
+  err: Error & { status: number; response: AjaxServiceResponse };
+  attemptNumber: number;
+  numOfAttempts: number;
+  req: AjaxServiceRequestOptionsBase;
+  cancelRetry: () => void;
+};
+export type RetryListener = (retryState: RetryState) => void;
+
+export type CancelState = {
+  req: AjaxServiceRequestOptionsBase;
+};
+export type CancelListener = (cancelState: CancelState) => void;
+
+export type AjaxServiceConfig = {
+  onRequest: Interceptor;
+  onResponse: ResponseListener;
+  onRetry: RetryListener;
+  onCancel: CancelListener;
+};
 
 export type AjaxServiceRequestOptions = AjaxServiceRequestOptionsBase & {
-  interceptors?: Interceptor[];
+  configs?: Partial<AjaxServiceConfig>[];
 };
 
 export type RequestInitWithUrl = RequestInit & { url: string; origin?: string };
+
+export type AjaxService = {
+  constants: typeof constants;
+  get<T = any>(opts: Partial<AjaxServiceRequestOptions>): Promise<AjaxServiceResponse<T>>;
+  post<T = any>(opts: Partial<AjaxServiceRequestOptions>): Promise<AjaxServiceResponse<T>>;
+  delete(
+    opts: Partial<AjaxServiceRequestOptions>
+  ): Promise<AjaxServiceResponse>;
+  send<T>(opts: AjaxServiceRequestOptions): Promise<AjaxServiceResponse<T>>;
+};
+
+export type AjaxServiceInitializer = ((
+  configs?: Partial<AjaxServiceConfig>[]
+) => AjaxService) & { constants: typeof constants };
