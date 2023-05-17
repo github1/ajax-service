@@ -1,7 +1,6 @@
 import { AjaxServiceRequestOptions, RequestInitWithUrl } from './types';
 import '@github1/amfjs/amf';
 import constants from './constants';
-import * as normalizeURL from 'normalize-url';
 
 const windowOrGlobal: any =
   (typeof self === 'object' && self.self === self && self) ||
@@ -17,6 +16,16 @@ const resolveOrigin = () => {
       }`
     : '';
 };
+
+function normalizeURL(url: string): string {
+  const match = /([a-z0-9]+:\/\/)(.*)$/i.exec(url);
+  const protocol = match[1];
+  const rest = match[2];
+  return `${protocol.toLowerCase()}${rest
+    .replace(/\/+/g, '/')
+    .replace(/(^\/+|\/+$)/g, '')
+    .replace(/\/+\?/, '?')}`;
+}
 
 export const prepareUrl = (opts: RequestInitWithUrl) => {
   const resolvedOrigin = opts.origin || resolveOrigin();

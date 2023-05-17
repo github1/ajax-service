@@ -16,6 +16,23 @@ describe('prepareOptions', () => {
         'http://foo.com/foo'
       );
     });
+    it('normalizes urls', () => {
+      expect(prepareUrl({ url: 'https://foo.com//foo' }).url).toBe(
+        'https://foo.com/foo'
+      );
+      expect(prepareUrl({ url: 'HTTPs://foo.com//foo//' }).url).toBe(
+        'https://foo.com/foo'
+      );
+      expect(prepareUrl({ url: '/foo', origin: 'https://blah.com/' }).url).toBe(
+        'https://blah.com/foo'
+      );
+      expect(prepareUrl({ url: 'foo', origin: 'https://blah.com/' }).url).toBe(
+        'https://blah.com/foo'
+      );
+      expect(prepareUrl({ url: 'foo/?q=123&r=123', origin: 'https://blah.com/' }).url).toBe(
+        'https://blah.com/foo?q=123&r=123'
+      );
+    });
   });
   describe('headers', () => {
     const defaultHeaders = {
