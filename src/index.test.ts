@@ -179,7 +179,7 @@ describe('ajax-service', () => {
         .catch((err) => {
           // should be 'tryAttemptNumber' maybe?
           expect(err.retryAttemptNumber).toBe(1);
-          expect(err.status).toBe(404);
+          expect(err.response.status).toBe(404);
         });
     });
     it('fails if numOfAttempts is exceeded', () => {
@@ -201,7 +201,7 @@ describe('ajax-service', () => {
           },
         })
         .catch((err) => {
-          expect(err.status).toBe(503);
+          expect(err.response.status).toBe(503);
         });
     });
   });

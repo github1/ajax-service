@@ -28,7 +28,7 @@ export class AjaxServiceError extends Error {
 }
 
 export function isAjaxServiceError(err: Error): err is AjaxServiceError {
-  return err && 'response' in err;
+  return err && typeof err === 'object' && 'response' in err;
 }
 
 export type RetryState = {
