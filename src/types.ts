@@ -21,6 +21,16 @@ export type AjaxServiceResponse<T = any> = {
   data: T;
 };
 
+export class AjaxServiceError extends Error {
+  constructor(public readonly response: AjaxServiceResponse) {
+    super(`${response.status}`);
+  }
+}
+
+export function isAjaxServiceError(err: Error): err is AjaxServiceError {
+  return err && 'response' in err;
+}
+
 export type RetryState = {
   err: Error & { status: number; response: AjaxServiceResponse };
   attemptNumber: number;

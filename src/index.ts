@@ -10,6 +10,7 @@ import {
   CancelListener,
   RetryState,
   RequestState,
+  AjaxServiceError
 } from './types';
 import constants from './constants';
 import prepareOptions, {
@@ -58,13 +59,7 @@ function createFetch(
       }
       if (fetchResponse.status < 200 || fetchResponse.status >= 400) {
         return resPromise.then((resp) => {
-          const err: Error & {
-            status?: number;
-            response?: AjaxServiceResponse;
-          } = new Error(`${fetchResponse.status}`);
-          err.status = resp.status;
-          err.response = resp;
-          throw err;
+          throw new AjaxServiceError(resp);
         });
       }
       return resPromise;
